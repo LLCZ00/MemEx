@@ -1,6 +1,6 @@
 # MemEx
 ### _Memory Extractor_
-MemEx is a script for extracting unpacked exectutables from the process memory of packed binaries.
+MemEx is a script for extracting exectutables from memory. Specifically, it was intended for retrieving unpacked executables from the process memory of packed binaries, and dumping processes which have deleted their calling executable.
 
 Currently only compatible with Linux.
 ## Usage
@@ -19,7 +19,7 @@ Examples:
 	memex.py -o sus --pid 23465
 	memex.py -i "./sus --config /home/user/config.txt"
 ```
-MemEx can be given the PID of an active process, or run a given executable directly. Arguments can be passed along with the executable by surrounding the whole command in quotes, as per example #3.
+MemEx can be given the PID of an active process, or run and dump a given executable directly. Arguments can be passed along with the executable by surrounding the whole command in quotes, as per example #3.
 
 Root privilages are required to access the memory of other processes.
 ## Known Issues & TODO
@@ -29,3 +29,4 @@ Root privilages are required to access the memory of other processes.
 - Windows version (maybe)
 - There is currently a 0.5 second delay built in when starting a new process, to allow time for it to unpack itself. I haven't done extensive testing with the times so it may not be optimal, or even the best solution.
 	- Add way to customize the delay time
+- Might change *-i* to a positional argument, depending on if/how future features are handled
