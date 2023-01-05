@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# Copyright (C) 2022 LLCZ00
+# Copyright (C) 2023 LLCZ00
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -11,14 +11,17 @@
 # limitations under the License.  
 #
 """
-memex.py - Extract executable from process memory
-- Linux
+Extract file from memory of given PID (Linux)
 
 References:
 https://stackoverflow.com/questions/1401359/understanding-linux-proc-pid-maps-or-proc-self-maps
 https://man7.org/linux/man-pages/man5/proc.5.html
+
+TODO:
+    - Raise error if running process fails
+    - Process method for getting any proc/pid/ file info
 """
-__VERS = "1.0.0"
+__VERS = "1.0.1"
 import sys
 import os
 import re
@@ -29,14 +32,14 @@ import argparse
 from time import sleep
 
 
-class ProcInfo: # This is kinda fugly
+class Process: # This is kinda fugly
     def __init__(self, pid):
         self.pid = pid
 
     @classmethod
-    def command(cls, exe_cmd, delay=0.5):
+    def run(cls, exe_cmd, delay=0.5):
         """
-        Start new process with given file/command, return ProcInfo instance with new process ID
+        Start new process with given file/command, return Process instance with the new process ID
         - Delay required to actually give the process time to unpack
         """
         proc = subprocess.Popen(shlex.split(exe_cmd))
@@ -55,16 +58,16 @@ class ProcInfo: # This is kinda fugly
             for region in maps_file.readlines(): # Iterate through each mapped region
                 address = re.match(r'([0-9A-Fa-f]+)-([0-9A-Fa-f]+) ([-r])', region) # (start)-(end) (read_permission bit)
                 if address.group(3) == 'r':
-                    start_addr = int(address.group(1), 16) # Convert address strings to base 16 integer
-                    end_addr = int(address.group(2), 16)
-                    mem_file.seek(start_addr)
                     try:
+                        start_addr = int(address.group(1), 16) # Convert address strings to base 16 integer
+                        end_addr = int(address.group(2), 16)
+                        mem_file.seek(start_addr)
                         chunk = mem_file.read(end_addr - start_addr) # Dump region contents into output file
                         output_file.write(chunk)
-                    except OSError:
+                    except:
                         logging.info(f"Skipped: {region}")
                         continue
-        print(f"[OK] Process ({self.pid}) dumped to: {output}") # ! Check if this was actually successful
+            print(f"[OK] Process ({self.pid}) dumped to: {output}") # ! Check if this was actually successful
 
 
 
@@ -151,13 +154,12 @@ def main():
     args = parse_arguments()
 
     if args.input_exe:
-        process = ProcInfo.command(args.input_exe)
+        process = Process.run(args.input_exe)
     else:
-        process = ProcInfo(args.pid)
+        process = Process(args.pid)
 
     process.dump(args.output)
 
 
 if __name__ == "__main__":
     sys.exit(main())
-
